@@ -85,7 +85,7 @@ class PostDeleteView(AuthorAccessMixin, PostMixin, DeleteView):
     template_name = 'blog/create.html'
     success_url = reverse_lazy('blog:index')
 
-    def get_object(self, queryset=None):
+    def get_object(self):
         return get_object_or_404(
             Post,
             pk=self.kwargs.get(self.pk_url_kwarg)
@@ -119,7 +119,7 @@ class ProfileListView(PostMixin, ListView):
         return context
 
 
-class ProfileUpdateView(UpdateView):
+class ProfileUpdateView(LoginRequiredMixin, UpdateView):
     model = User
     template_name = 'blog/user.html'
     form_class = EditUserForm
