@@ -22,7 +22,7 @@ class CommentChangeMixin:
     def get_success_url(self):
         return reverse(
             'blog:post_detail',
-            args=[self.kwargs['pk']]
+            args=[self.kwargs['post_id']]
         )
 
     def get_context_data(self, **kwargs):

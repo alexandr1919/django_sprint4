@@ -25,15 +25,13 @@ def get_posts(
     filter_by_is_published=True,
     count_comments=True,
 ):
-    print(filter_by_is_published)
     posts = posts.select_related(
         'author', 'location', 'category'
     )
-    print('11111 ', filter_by_is_published)
     if filter_by_is_published:
         posts = posts.filter(is_published=True, category__is_published=True)
     if count_comments:
-        return posts.annotate(comment_count=Count('comments'))
+        posts = posts.annotate(comment_count=Count('comments'))
     return posts.order_by('-pub_date')
 
 
@@ -181,7 +179,7 @@ class CategoryListView(PostMixin, ListView):
 
 class CommentCreateView(CommentChangeMixin, LoginRequiredMixin, CreateView):
     def form_valid(self, form):
-        form.instance.post = get_object_or_404(Post, pk=self.kwargs['pk'])
+        form.instance.post = get_object_or_404(Post, pk=self.kwargs['post_id'])
         form.instance.author = self.request.user
         return super().form_valid(form)
 
