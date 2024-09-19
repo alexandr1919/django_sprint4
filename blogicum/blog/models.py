@@ -2,15 +2,14 @@ from django.contrib.auth import get_user_model
 from django.db import models
 
 
-User = get_user_model()
 CHAR_LEN = 256
 TITLE_LEN = 20
+User = get_user_model()
 
 
 class BaseBlogModel(models.Model):
     created_at = models.DateTimeField(
         auto_now_add=True,
-        auto_now=False,
         verbose_name='Добавлено',
     )
     is_published = models.BooleanField(
@@ -20,6 +19,7 @@ class BaseBlogModel(models.Model):
     )
 
     class Meta:
+        ordering = ('created_at',)
         abstract = True
 
 
@@ -48,7 +48,6 @@ class Category(BaseBlogModel):
         help_text='Идентификатор страницы для URL; '
                   'разрешены символы латиницы, цифры, дефис и подчёркивание.',
         verbose_name='Идентификатор',
-        null=False,
     )
 
     class Meta:
@@ -97,9 +96,9 @@ class Post(BaseBlogModel):
     image = models.ImageField('Изображение', blank=True, upload_to='img/')
 
     class Meta:
+        ordering = ('-pub_date',)
         verbose_name = 'публикация'
         verbose_name_plural = 'Публикации'
-        ordering = ('-pub_date',)
 
     def __str__(self):
         return self.title[:TITLE_LEN]
