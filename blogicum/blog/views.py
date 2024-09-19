@@ -40,6 +40,18 @@ class IndexListView(PostMixin, ListView):
 class PostDetailView(PostMixin, DetailView):
     template_name = 'blog/detail.html'
 
+    def get_object(self):
+        post = get_object_or_404(
+            Post.objects,
+            id=self.kwargs.get(self.pk_url_kwarg)
+        )
+        if self.request.user != post.author:
+            return get_object_or_404(
+                get_posts(Post.objects).filter(is_published=True),
+                id=self.kwargs.get(self.pk_url_kwarg)
+            )
+        return post
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['form'] = CreateCommentForm()
