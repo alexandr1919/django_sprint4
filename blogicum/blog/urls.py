@@ -20,9 +20,9 @@ urlpatterns = [
         name='edit_post'
     ),
     path(
-        'delete/<int:post_id>/',
+        'posts/<int:pk>/delete/',
         views.PostDeleteView.as_view(),
-        name='delete_post'
+        name='delete_post',
     ),
     path(
         'profile/<str:username>/',

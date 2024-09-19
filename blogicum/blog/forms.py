@@ -6,7 +6,7 @@ from .models import Post, User, Comment
 class EditUserForm(ModelForm):
     class Meta:
         model = User
-        fields = ("username", "email", "first_name", "last_name")
+        fields = ('username', 'email', 'first_name', 'last_name')
 
 
 class CreatePostForm(ModelForm):
@@ -27,4 +27,4 @@ class CreatePostForm(ModelForm):
 class CreateCommentForm(ModelForm):
     class Meta:
         model = Comment
-        fields = ("text",)
+        fields = ('text',)

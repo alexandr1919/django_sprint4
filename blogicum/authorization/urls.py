@@ -29,8 +29,8 @@ urlpatterns = [
         name='password_reset_confirm',
     ),
     path(
-        "auth/registration/",
+        'auth/registration/',
         views.UserCreateView.as_view(),
-        name="registration",
+        name='registration',
     ),
 ]

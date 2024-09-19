@@ -8,3 +8,6 @@ urlpatterns = [
     path('', include('authorization.urls', namespace='authorization')),
     path('', include('blog.urls', namespace='blog')),
 ]
+
+handler404 = 'pages.views.handler404'
+handler500 = 'pages.views.handler500'

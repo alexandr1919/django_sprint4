@@ -22,9 +22,7 @@ POST_PER_PAGE = 10
 
 
 def get_posts(posts):
-    return posts.filter(
-        category__is_published=True
-    ).select_related(
+    return posts.select_related(
         'author', 'location', 'category'
     ).order_by('-pub_date').annotate(comment_count=Count('comments'))
 
@@ -35,8 +33,8 @@ class IndexListView(PostMixin, ListView):
 
     def get_queryset(self):
         return get_posts(Post.objects).filter(
-            is_published=True, pub_date__lte=datetime.today()
-        )
+            category__is_published=True
+        ).filter(is_published=True, pub_date__lte=datetime.today())
 
 
 class PostDetailView(PostMixin, DetailView):
@@ -105,7 +103,9 @@ class ProfileListView(PostMixin, ListView):
 
     def get_queryset(self):
         profile = get_object_or_404(User, username=self.kwargs['username'])
-        posts = get_posts(Post.objects).filter(author=profile)
+        posts = get_posts(Post.objects).filter(
+            author=profile
+        )
         if not self.request.user.id == profile.id:
             posts = posts.filter(
                 is_published=True,
@@ -153,7 +153,8 @@ class CategoryListView(PostMixin, ListView):
         )
         return get_posts(self.category.posts.all()).filter(
             is_published=True,
-            pub_date__lte=datetime.today()
+            pub_date__lte=datetime.today(),
+            category__is_published=True
         )
 
     def get_context_data(self, **kwargs):
