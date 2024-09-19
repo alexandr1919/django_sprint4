@@ -25,14 +25,16 @@ def get_posts(
     filter_by_is_published=True,
     count_comments=True,
 ):
+    print(filter_by_is_published)
     posts = posts.select_related(
         'author', 'location', 'category'
-    ).filter(
-        is_published=filter_by_is_published,
-        category__is_published=True).order_by('-pub_date')
+    )
+    print('11111 ', filter_by_is_published)
+    if filter_by_is_published:
+        posts = posts.filter(is_published=True, category__is_published=True)
     if count_comments:
         return posts.annotate(comment_count=Count('comments'))
-    return posts
+    return posts.order_by('-pub_date')
 
 
 def get_author(user):
@@ -120,7 +122,7 @@ class ProfileListView(PostMixin, ListView):
     def get_queryset(self):
         author = get_author(self)
         is_author = self.request.user == author
-        posts = get_posts(author.posts.all(), is_author)
+        posts = get_posts(author.posts.all(), not is_author)
         if not is_author:
             posts = posts.filter(pub_date__lte=timezone.now())
         return posts
