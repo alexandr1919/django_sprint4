@@ -8,6 +8,3 @@ class UserCreateView(CreateView):
     form_class = UserCreateForm
     template_name = 'registration/registration_form.html'
     success_url = reverse_lazy('blog:index')
-
-    def form_valid(self, form):
-        return super().form_valid(form)

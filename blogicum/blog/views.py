@@ -60,8 +60,8 @@ class PostDetailView(PostMixin, DetailView):
         return get_object_or_404(
             get_posts(
                 Post.objects,
-                filter_by_is_published=True,
-                count_comments=False
+                count_comments=False,
+                join_related=False
             ),
             id=self.kwargs.get(self.pk_url_kwarg)
         )
