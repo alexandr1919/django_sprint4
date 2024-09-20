@@ -29,7 +29,7 @@ class Location(BaseBlogModel):
         verbose_name='Название места',
     )
 
-    class Meta:
+    class Meta(BaseBlogModel.Meta):
         verbose_name = 'местоположение'
         verbose_name_plural = 'Местоположения'
 
@@ -50,7 +50,7 @@ class Category(BaseBlogModel):
         verbose_name='Идентификатор',
     )
 
-    class Meta:
+    class Meta(BaseBlogModel.Meta):
         verbose_name = 'категория'
         verbose_name_plural = 'Категории'
 

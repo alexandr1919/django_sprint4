@@ -10,7 +10,6 @@ from django.views.generic import (
 )
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.utils import timezone
 from django.urls import reverse, reverse_lazy
 
 from .models import Category, Post, User
@@ -22,27 +21,30 @@ POSTS_PER_PAGE = 10
 
 def get_posts(
     posts=Post.objects,
+    *,
     filter_by_is_published=True,
     count_comments=True,
+    join_related=True,
 ):
-    posts = posts.select_related(
-        'author', 'location', 'category'
-    )
+    if join_related:
+        posts = posts.select_related('author', 'location', 'category')
     if filter_by_is_published:
-        posts = posts.filter(is_published=True, category__is_published=True)
+        posts = posts.filter(
+            is_published=True,
+            category__is_published=True,
+            pub_date__lte=datetime.today()
+        )
     if count_comments:
-        posts = posts.annotate(comment_count=Count('comments'))
-    return posts.order_by('-pub_date')
-
-
-def get_author(user):
-    return get_object_or_404(User, username=user.kwargs['username'])
+        return posts.annotate(comment_count=Count('comments')).order_by(
+            '-pub_date'
+        )
+    return posts
 
 
 class IndexListView(PostMixin, ListView):
     template_name = 'blog/index.html'
     paginate_by = POSTS_PER_PAGE
-    queryset = get_posts(Post.objects).filter(pub_date__lte=datetime.today())
+    queryset = get_posts(Post.objects)
 
 
 class PostDetailView(PostMixin, DetailView):
@@ -53,12 +55,14 @@ class PostDetailView(PostMixin, DetailView):
             Post.objects,
             id=self.kwargs.get(self.pk_url_kwarg)
         )
-        is_author = self.request.user == post.author
-        if is_author:
+        if self.request.user == post.author:
             return post
-
         return get_object_or_404(
-            get_posts(Post.objects, not is_author, not is_author),
+            get_posts(
+                Post.objects,
+                filter_by_is_published=True,
+                count_comments=False
+            ),
             id=self.kwargs.get(self.pk_url_kwarg)
         )
 
@@ -93,12 +97,12 @@ class PostUpdateView(AuthorAccessMixin, PostMixin, UpdateView):
     def dispatch(self, request, *args, **kwargs):
         if self.get_object().author != request.user:
             return redirect('blog:post_detail',
-                            post_id=self.kwargs.get('post_id'))
+                            post_id=self.kwargs.get(self.pk_url_kwarg))
         return super().dispatch(request, *args, **kwargs)
 
     def get_success_url(self):
         return reverse(
-            'blog:post_detail', kwargs={'post_id': self.kwargs.get('post_id')}
+            'blog:post_detail', args=[self.kwargs.get(self.pk_url_kwarg)]
         )
 
 
@@ -117,18 +121,20 @@ class ProfileListView(PostMixin, ListView):
     template_name = 'blog/profile.html'
     paginate_by = POSTS_PER_PAGE
 
+    def get_author(self):
+        return get_object_or_404(User, username=self.kwargs['username'])
+
     def get_queryset(self):
-        author = get_author(self)
-        is_author = self.request.user == author
-        posts = get_posts(author.posts.all(), not is_author)
-        if not is_author:
-            posts = posts.filter(pub_date__lte=timezone.now())
-        return posts
+        author = self.get_author()
+        return get_posts(
+            author.posts.all(),
+            filter_by_is_published=self.request.user != author
+        )
 
     def get_context_data(self, **kwargs):
         return super().get_context_data(
             **kwargs,
-            profile=get_author(self),
+            profile=self.get_author(),
         )
 
 
@@ -156,24 +162,20 @@ class CategoryListView(PostMixin, ListView):
     template_name = 'blog/category.html'
     paginate_by = POSTS_PER_PAGE
 
-    def get_queryset(self):
-        category = get_object_or_404(
+    def get_category(self):
+        return get_object_or_404(
             Category,
             slug=self.kwargs['category_slug'],
             is_published=True
         )
-        return get_posts(category.posts.all()).filter(
-            pub_date__lte=datetime.today()
-        )
+
+    def get_queryset(self):
+        return get_posts(self.get_category().posts.all())
 
     def get_context_data(self, **kwargs):
         return super().get_context_data(
             **kwargs,
-            category=get_object_or_404(
-                Category,
-                slug=self.kwargs['category_slug'],
-                is_published=True
-            ),
+            category=self.get_category()
         )
 
 
